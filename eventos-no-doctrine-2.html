@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+        <meta charset="utf-8" />
+        <title>Eventos no Doctrine 2</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Royopa Blog </a></h1>
+                <nav><ul>
+                    <li><a href="/category/dspace.html">DSpace</a></li>
+                    <li><a href="/category/finance.html">Finance</a></li>
+                    <li><a href="/category/git.html">GIT</a></li>
+                    <li class="active"><a href="/category/php.html">PHP</a></li>
+                    <li><a href="/category/solid.html">SOLID</a></li>
+                </ul>
+                </nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/eventos-no-doctrine-2.html" rel="bookmark"
+           title="Permalink to Eventos no Doctrine 2">Eventos no Doctrine 2</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <span>Qui 04 setembro 2014</span>
+
+</footer><!-- /.post-info -->      <p>O Doctrine 2 possui um sistema de eventos que faz parte do pacote Common. O
+doctrine usa esse sistema para disparar eventos de sistema, principalmente
+<code>lifecycle events</code>. Mas podemos também criar nossos próprios eventos personalizados.</p>
+<h3>O Sistema de Eventos</h3>
+<p>O sistema de eventos é controlado pelo <code>EventManager</code>. Ele é o ponto central do
+sistema de event listener do Doctrine. Os Listeners são registrados no manager e
+os eventos são disparados pelo manager.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="nv">$evm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">EventManager</span><span class="p">();</span>
+</pre></div>
+
+
+<p>Now we can add some event listeners to the <code>$evm</code>. Let's create a
+<code>TestEvent</code> class to play around with.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">TestEvent</span>
+    <span class="p">{</span>
+        <span class="k">const</span> <span class="no">preFoo</span> <span class="o">=</span> <span class="s1">&#39;preFoo&#39;</span><span class="p">;</span>
+        <span class="k">const</span> <span class="no">postFoo</span> <span class="o">=</span> <span class="s1">&#39;postFoo&#39;</span><span class="p">;</span>
+
+        <span class="k">private</span> <span class="nv">$_evm</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="nv">$preFooInvoked</span> <span class="o">=</span> <span class="k">false</span><span class="p">;</span>
+        <span class="k">public</span> <span class="nv">$postFooInvoked</span> <span class="o">=</span> <span class="k">false</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nv">$evm</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$evm</span><span class="o">-&gt;</span><span class="na">addEventListener</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="nx">self</span><span class="o">::</span><span class="na">preFoo</span><span class="p">,</span> <span class="nx">self</span><span class="o">::</span><span class="na">postFoo</span><span class="p">),</span> <span class="nv">$this</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preFoo</span><span class="p">(</span><span class="nx">EventArgs</span> <span class="nv">$e</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">preFooInvoked</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postFoo</span><span class="p">(</span><span class="nx">EventArgs</span> <span class="nv">$e</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">postFooInvoked</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Create a new instance</span>
+    <span class="nv">$test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TestEvent</span><span class="p">(</span><span class="nv">$evm</span><span class="p">);</span>
+
+<span class="nx">Events</span> <span class="nx">can</span> <span class="nx">be</span> <span class="nx">dispatched</span> <span class="nx">by</span> <span class="nx">using</span> <span class="nx">the</span> <span class="sb">``</span><span class="nx">dispatchEvent</span><span class="p">()</span><span class="sb">``</span> <span class="nx">method</span><span class="o">.</span>
+
+<span class="sb">```php</span>
+
+<span class="sb">    &lt;?php</span>
+<span class="sb">    $evm-&gt;dispatchEvent(TestEvent::preFoo);</span>
+<span class="sb">    $evm-&gt;dispatchEvent(TestEvent::postFoo);</span>
+
+<span class="sb">You can easily remove a listener with the ``removeEventListener()``</span>
+<span class="sb">method.</span>
+
+<span class="sb">```</span><span class="nx">php</span>
+
+    <span class="o">&lt;?</span><span class="nx">php</span>
+    <span class="nv">$evm</span><span class="o">-&gt;</span><span class="na">removeEventListener</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="nx">self</span><span class="o">::</span><span class="na">preFoo</span><span class="p">,</span> <span class="nx">self</span><span class="o">::</span><span class="na">postFoo</span><span class="p">),</span> <span class="nv">$this</span><span class="p">);</span>
+
+<span class="nx">The</span> <span class="nx">Doctrine</span> <span class="mi">2</span> <span class="nx">event</span> <span class="nb">system</span> <span class="nx">also</span> <span class="nx">has</span> <span class="nx">a</span> <span class="nx">simple</span> <span class="nx">concept</span> <span class="nx">of</span> <span class="nx">event</span>
+<span class="nx">subscribers</span><span class="o">.</span> <span class="nx">We</span> <span class="nx">can</span> <span class="nb">define</span> <span class="nx">a</span> <span class="nx">simple</span> <span class="sb">``</span><span class="nx">TestEventSubscriber</span><span class="sb">``</span> <span class="k">class</span>
+<span class="nc">which</span> <span class="k">implements</span> <span class="nx">the</span> <span class="sb">``</span><span class="nx">\Doctrine\Common\EventSubscriber</span><span class="sb">``</span> <span class="k">interface</span>
+<span class="k">and</span> <span class="k">implements</span> <span class="nx">a</span> <span class="sb">``</span><span class="nx">getSubscribedEvents</span><span class="p">()</span><span class="sb">``</span> <span class="nx">method</span> <span class="nx">which</span> <span class="nx">returns</span> <span class="nx">an</span>
+<span class="k">array</span> <span class="nx">of</span> <span class="nx">events</span> <span class="nx">it</span> <span class="nx">should</span> <span class="nx">be</span> <span class="nx">subscribed</span> <span class="nx">to</span><span class="o">.</span>
+
+<span class="sb">```php</span>
+
+<span class="sb">    &lt;?php</span>
+<span class="sb">    class TestEventSubscriber implements \Doctrine\Common\EventSubscriber</span>
+<span class="sb">    {</span>
+<span class="sb">        public $preFooInvoked = false;</span>
+
+<span class="sb">        public function preFoo()</span>
+<span class="sb">        {</span>
+<span class="sb">            $this-&gt;preFooInvoked = true;</span>
+<span class="sb">        }</span>
+
+<span class="sb">        public function getSubscribedEvents()</span>
+<span class="sb">        {</span>
+<span class="sb">            return array(TestEvent::preFoo);</span>
+<span class="sb">        }</span>
+<span class="sb">    }</span>
+
+<span class="sb">    $eventSubscriber = new TestEventSubscriber();</span>
+<span class="sb">    $evm-&gt;addEventSubscriber($eventSubscriber);</span>
+
+<span class="sb">.. note::</span>
+
+<span class="sb">    The array to return in the ``getSubscribedEvents`` method is a simple array</span>
+<span class="sb">    with the values being the event names. The subscriber must have a method</span>
+<span class="sb">    that is named exactly like the event.</span>
+
+<span class="sb">Now when you dispatch an event, any event subscribers will be</span>
+<span class="sb">notified for that event.</span>
+
+<span class="sb">```</span><span class="nx">php</span>
+
+    <span class="o">&lt;?</span><span class="nx">php</span>
+    <span class="nv">$evm</span><span class="o">-&gt;</span><span class="na">dispatchEvent</span><span class="p">(</span><span class="nx">TestEvent</span><span class="o">::</span><span class="na">preFoo</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Now you can test the <code>$eventSubscriber</code> instance to see if the
+<code>preFoo()</code> method was invoked.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nv">$eventSubscriber</span><span class="o">-&gt;</span><span class="na">preFooInvoked</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s1">&#39;pre foo invoked!&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>Naming convention
+~~~~~~~~~~~~~~~~~</p>
+<p>Events being used with the Doctrine 2 EventManager are best named
+with camelcase and the value of the corresponding constant should
+be the name of the constant itself, even with spelling. This has
+several reasons:</p>
+<ul>
+<li>It is easy to read.</li>
+<li>Simplicity.</li>
+<li>Each method within an EventSubscriber is named after the
+   corresponding constant's value. If the constant's name and value differ
+   it contradicts the intention of using the constant and makes your code
+   harder to maintain.</li>
+</ul>
+<p>An example for a correct notation can be found in the example
+<code>TestEvent</code> above.</p>
+<p>.. _reference-events-lifecycle-events:</p>
+<h2>Lifecycle Events</h2>
+<p>The EntityManager and UnitOfWork trigger a bunch of events during
+the life-time of their registered entities.</p>
+<ul>
+<li>preRemove - The preRemove event occurs for a given entity before
+   the respective EntityManager remove operation for that entity is
+   executed.  It is not called for a DQL DELETE statement.</li>
+<li>postRemove - The postRemove event occurs for an entity after the
+   entity has been deleted. It will be invoked after the database
+   delete operations. It is not called for a DQL DELETE statement.</li>
+<li>prePersist - The prePersist event occurs for a given entity
+   before the respective EntityManager persist operation for that
+   entity is executed. It should be noted that this event is only triggered on
+   <em>initial</em> persist of an entity (i.e. it does not trigger on future updates).</li>
+<li>postPersist - The postPersist event occurs for an entity after
+   the entity has been made persistent. It will be invoked after the
+   database insert operations. Generated primary key values are
+   available in the postPersist event.</li>
+<li>preUpdate - The preUpdate event occurs before the database
+   update operations to entity data. It is not called for a DQL UPDATE statement.</li>
+<li>postUpdate - The postUpdate event occurs after the database
+   update operations to entity data. It is not called for a DQL UPDATE statement.</li>
+<li>postLoad - The postLoad event occurs for an entity after the
+   entity has been loaded into the current EntityManager from the
+   database or after the refresh operation has been applied to it.</li>
+<li>loadClassMetadata - The loadClassMetadata event occurs after the
+   mapping metadata for a class has been loaded from a mapping source
+   (annotations/xml/yaml). This event is not a lifecycle callback.</li>
+<li>preFlush - The preFlush event occurs at the very beginning of a flush
+   operation. This event is not a lifecycle callback.</li>
+<li>onFlush - The onFlush event occurs after the change-sets of all
+   managed entities are computed. This event is not a lifecycle
+   callback.</li>
+<li>postFlush - The postFlush event occurs at the end of a flush operation. This
+   event is not a lifecycle callback.</li>
+<li>onClear - The onClear event occurs when the EntityManager#clear() operation is
+   invoked, after all references to entities have been removed from the unit of
+   work. This event is not a lifecycle callback.</li>
+</ul>
+<p>.. warning::</p>
+<div class="highlight"><pre>Note that the postLoad event occurs for an entity
+before any associations have been initialized. Therefore it is not
+safe to access associations in a postLoad callback or event
+handler.
+</pre></div>
+
+
+<p>.. warning::</p>
+<div class="highlight"><pre>Note that the postRemove event or any events triggered after an entity removal
+can receive an uninitializable proxy in case you have configured an entity to
+cascade remove relations. In this case, you should load yourself the proxy in
+the associated pre event.
+</pre></div>
+
+
+<p>You can access the Event constants from the <code>Events</code> class in the
+ORM package.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">use</span> <span class="nx">Doctrine\ORM\Events</span><span class="p">;</span>
+    <span class="k">echo</span> <span class="nx">Events</span><span class="o">::</span><span class="na">preUpdate</span><span class="p">;</span>
+
+<span class="nx">These</span> <span class="nx">can</span> <span class="nx">be</span> <span class="nx">hooked</span> <span class="nx">into</span> <span class="nx">by</span> <span class="nx">two</span> <span class="nx">different</span> <span class="nx">types</span> <span class="nx">of</span> <span class="nx">event</span>
+<span class="nx">listeners</span><span class="o">:</span>
+
+<span class="o">-</span>  <span class="nx">Lifecycle</span> <span class="nx">Callbacks</span> <span class="nx">are</span> <span class="nx">methods</span> <span class="nx">on</span> <span class="nx">the</span> <span class="nx">entity</span> <span class="nx">classes</span> <span class="nx">that</span> <span class="nx">are</span>
+   <span class="nx">called</span> <span class="nx">when</span> <span class="nx">the</span> <span class="nx">event</span> <span class="nx">is</span> <span class="nx">triggered</span><span class="o">.</span> <span class="k">As</span> <span class="nx">of</span> <span class="nx">v2</span><span class="o">.</span><span class="mi">4</span> <span class="nx">they</span> <span class="nx">receive</span> <span class="nx">some</span> <span class="nx">kind</span>
+   <span class="nx">of</span> <span class="sb">``</span><span class="nx">EventArgs</span><span class="sb">``</span> <span class="nx">instance</span><span class="o">.</span>
+<span class="o">-</span>  <span class="nx">Lifecycle</span> <span class="nx">Event</span> <span class="nx">Listeners</span> <span class="k">and</span> <span class="nx">Subscribers</span> <span class="nx">are</span> <span class="nx">classes</span> <span class="nx">with</span> <span class="nx">specific</span> <span class="nx">callback</span>
+   <span class="nx">methods</span> <span class="nx">that</span> <span class="nx">receives</span> <span class="nx">some</span> <span class="nx">kind</span> <span class="nx">of</span> <span class="sb">``</span><span class="nx">EventArgs</span><span class="sb">``</span> <span class="nx">instance</span><span class="o">.</span>
+
+<span class="nx">The</span> <span class="nx">EventArgs</span> <span class="nx">instance</span> <span class="nx">received</span> <span class="nx">by</span> <span class="nx">the</span> <span class="nx">listener</span> <span class="nx">gives</span> <span class="nx">access</span> <span class="nx">to</span> <span class="nx">the</span> <span class="nx">entity</span><span class="p">,</span>
+<span class="nx">EntityManager</span> <span class="k">and</span> <span class="nx">other</span> <span class="nx">relevant</span> <span class="nx">data</span><span class="o">.</span>
+
+<span class="o">..</span> <span class="nx">note</span><span class="o">::</span>
+
+    <span class="na">All</span> <span class="nx">Lifecycle</span> <span class="nx">events</span> <span class="nx">that</span> <span class="nx">happen</span> <span class="nx">during</span> <span class="nx">the</span> <span class="sb">``</span><span class="nb">flush</span><span class="p">()</span><span class="sb">``</span> <span class="nx">of</span>
+    <span class="nx">an</span> <span class="nx">EntityManager</span> <span class="nx">have</span> <span class="nx">very</span> <span class="nx">specific</span> <span class="nx">constraints</span> <span class="nx">on</span> <span class="nx">the</span> <span class="nx">allowed</span>
+    <span class="nx">operations</span> <span class="nx">that</span> <span class="nx">can</span> <span class="nx">be</span> <span class="nx">executed</span><span class="o">.</span> <span class="nx">Please</span> <span class="nx">read</span> <span class="nx">the</span>
+    <span class="o">:</span><span class="nx">ref</span><span class="o">:</span><span class="sb">`reference-events-implementing-listeners`</span> <span class="nx">section</span> <span class="nx">very</span> <span class="nx">carefully</span>
+    <span class="nx">to</span> <span class="nx">understand</span> <span class="nx">which</span> <span class="nx">operations</span> <span class="nx">are</span> <span class="nx">allowed</span> <span class="nx">in</span> <span class="nx">which</span> <span class="nx">lifecycle</span> <span class="nx">event</span><span class="o">.</span>
+
+
+<span class="nx">Lifecycle</span> <span class="nx">Callbacks</span>
+<span class="o">-------------------</span>
+
+<span class="nx">Lifecycle</span> <span class="nx">Callbacks</span> <span class="nx">are</span> <span class="nb">defined</span> <span class="nx">on</span> <span class="nx">an</span> <span class="nx">entity</span> <span class="nx">class</span><span class="o">.</span> <span class="nx">They</span> <span class="nx">allow</span> <span class="nx">you</span> <span class="nx">to</span>
+<span class="nx">trigger</span> <span class="nx">callbacks</span> <span class="nx">whenever</span> <span class="nx">an</span> <span class="nx">instance</span> <span class="nx">of</span> <span class="nx">that</span> <span class="nx">entity</span> <span class="k">class</span> <span class="nc">experiences</span>
+<span class="nx">a</span> <span class="nx">relevant</span> <span class="nx">lifecycle</span> <span class="nx">event</span><span class="o">.</span> <span class="nx">More</span> <span class="nx">than</span> <span class="nx">one</span> <span class="nx">callback</span> <span class="nx">can</span> <span class="nx">be</span> <span class="nb">defined</span> <span class="k">for</span> <span class="nb">each</span>
+<span class="nx">lifecycle</span> <span class="nx">event</span><span class="o">.</span> <span class="nx">Lifecycle</span> <span class="nx">Callbacks</span> <span class="nx">are</span> <span class="nx">best</span> <span class="nx">used</span> <span class="k">for</span> <span class="nx">simple</span> <span class="nx">operations</span>
+<span class="nx">specific</span> <span class="nx">to</span> <span class="nx">a</span> <span class="nx">particular</span> <span class="nx">entity</span> <span class="nx">class</span><span class="s1">&#39;s lifecycle.</span>
+
+<span class="s1">```php</span>
+
+<span class="s1">    &lt;?php</span>
+
+<span class="s1">    /** @Entity @HasLifecycleCallbacks */</span>
+<span class="s1">    class User</span>
+<span class="s1">    {</span>
+<span class="s1">        // ...</span>
+
+<span class="s1">        /**</span>
+<span class="s1">         * @Column(type=&quot;string&quot;, length=255)</span>
+<span class="s1">         */</span>
+<span class="s1">        public $value;</span>
+
+<span class="s1">        /** @Column(name=&quot;created_at&quot;, type=&quot;string&quot;, length=255) */</span>
+<span class="s1">        private $createdAt;</span>
+
+<span class="s1">        /** @PrePersist */</span>
+<span class="s1">        public function doStuffOnPrePersist()</span>
+<span class="s1">        {</span>
+<span class="s1">            $this-&gt;createdAt = date(&#39;</span><span class="nx">Y</span><span class="o">-</span><span class="nx">m</span><span class="o">-</span><span class="nx">d</span> <span class="nx">H</span><span class="o">:</span><span class="nx">i</span><span class="o">:</span><span class="nx">s</span><span class="s1">&#39;);</span>
+<span class="s1">        }</span>
+
+<span class="s1">        /** @PrePersist */</span>
+<span class="s1">        public function doOtherStuffOnPrePersist()</span>
+<span class="s1">        {</span>
+<span class="s1">            $this-&gt;value = &#39;</span><span class="nx">changed</span> <span class="nx">from</span> <span class="nx">prePersist</span> <span class="nx">callback</span><span class="o">!</span><span class="s1">&#39;;</span>
+<span class="s1">        }</span>
+
+<span class="s1">        /** @PostPersist */</span>
+<span class="s1">        public function doStuffOnPostPersist()</span>
+<span class="s1">        {</span>
+<span class="s1">            $this-&gt;value = &#39;</span><span class="nx">changed</span> <span class="nx">from</span> <span class="nx">postPersist</span> <span class="nx">callback</span><span class="o">!</span><span class="s1">&#39;;</span>
+<span class="s1">        }</span>
+
+<span class="s1">        /** @PostLoad */</span>
+<span class="s1">        public function doStuffOnPostLoad()</span>
+<span class="s1">        {</span>
+<span class="s1">            $this-&gt;value = &#39;</span><span class="nx">changed</span> <span class="nx">from</span> <span class="nx">postLoad</span> <span class="nx">callback</span><span class="o">!</span><span class="s1">&#39;;</span>
+<span class="s1">        }</span>
+
+<span class="s1">        /** @PreUpdate */</span>
+<span class="s1">        public function doStuffOnPreUpdate()</span>
+<span class="s1">        {</span>
+<span class="s1">            $this-&gt;value = &#39;</span><span class="nx">changed</span> <span class="nx">from</span> <span class="nx">preUpdate</span> <span class="nx">callback</span><span class="o">!</span><span class="err">&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>Note that the methods set as lifecycle callbacks need to be public and,
+when using these annotations, you have to apply the
+<code>@HasLifecycleCallbacks</code> marker annotation on the entity class.</p>
+<p>If you want to register lifecycle callbacks from YAML or XML you
+can do it with the following.</p>
+<div class="highlight"><pre>    <span class="l-Scalar-Plain">User</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">entity</span>
+      <span class="l-Scalar-Plain">fields</span><span class="p-Indicator">:</span>
+    <span class="c1"># ...</span>
+        <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span>
+          <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">string(50)</span>
+      <span class="l-Scalar-Plain">lifecycleCallbacks</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">prePersist</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span> <span class="nv">doStuffOnPrePersist</span><span class="p-Indicator">,</span> <span class="nv">doOtherStuffOnPrePersist</span> <span class="p-Indicator">]</span>
+        <span class="l-Scalar-Plain">postPersist</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span> <span class="nv">doStuffOnPostPersist</span> <span class="p-Indicator">]</span>
+</pre></div>
+
+
+<p>In YAML the <code>key</code> of the lifecycleCallbacks entry is the event that you
+are triggering on and the value is the method (or methods) to call. The allowed
+event types are the ones listed in the previous Lifecycle Events section.</p>
+<p>XML would look something like this:</p>
+<div class="highlight"><pre>    <span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+
+    <span class="nt">&lt;doctrine-mapping</span> <span class="na">xmlns=</span><span class="s">&quot;http://doctrine-project.org/schemas/orm/doctrine-mapping&quot;</span>
+          <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+          <span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://doctrine-project.org/schemas/orm/doctrine-mapping</span>
+<span class="s">                              /Users/robo/dev/php/Doctrine/doctrine-mapping.xsd&quot;</span><span class="nt">&gt;</span>
+
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;User&quot;</span><span class="nt">&gt;</span>
+
+            <span class="nt">&lt;lifecycle-callbacks&gt;</span>
+                <span class="nt">&lt;lifecycle-callback</span> <span class="na">type=</span><span class="s">&quot;prePersist&quot;</span> <span class="na">method=</span><span class="s">&quot;doStuffOnPrePersist&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;lifecycle-callback</span> <span class="na">type=</span><span class="s">&quot;postPersist&quot;</span> <span class="na">method=</span><span class="s">&quot;doStuffOnPostPersist&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/lifecycle-callbacks&gt;</span>
+
+        <span class="nt">&lt;/entity&gt;</span>
+
+    <span class="nt">&lt;/doctrine-mapping&gt;</span>
+</pre></div>
+
+
+<p>In XML the <code>type</code> of the lifecycle-callback entry is the event that you
+are triggering on and the <code>method</code> is the method to call. The allowed event
+types are the ones listed in the previous Lifecycle Events section.</p>
+<p>When using YAML or XML you need to remember to create public methods to match the
+callback names you defined. E.g. in these examples <code>doStuffOnPrePersist()</code>,
+<code>doOtherStuffOnPrePersist()</code> and <code>doStuffOnPostPersist()</code> methods need to be
+defined on your <code>User</code> model.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="c1">// ...</span>
+
+    <span class="k">class</span> <span class="nc">User</span>
+    <span class="p">{</span>
+        <span class="c1">// ...</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">doStuffOnPrePersist</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">doOtherStuffOnPrePersist</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">doStuffOnPostPersist</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<h2>Lifecycle Callbacks Event Argument</h2>
+<p>.. versionadded:: 2.4</p>
+<p>Since 2.4 the triggered event is given to the lifecycle-callback.</p>
+<p>With the additional argument you have access to the
+<code>EntityManager</code> and <code>UnitOfWork</code> APIs inside these callback methods.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="c1">// ...</span>
+
+    <span class="k">class</span> <span class="nc">User</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdate</span><span class="p">(</span><span class="nx">PreUpdateEventArgs</span> <span class="nv">$event</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">hasChangedField</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="c1">// Do something when the username is changed.</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<h2>Listening and subscribing to Lifecycle Events</h2>
+<p>Lifecycle event listeners are much more powerful than the simple
+lifecycle callbacks that are defined on the entity classes. They
+sit at a level above the entities and allow you to implement re-usable
+behaviors across different entity classes.</p>
+<p>Note that they require much more detailed knowledge about the inner
+workings of the EntityManager and UnitOfWork. Please read the
+<em>Implementing Event Listeners</em> section carefully if you are trying
+to write your own listener.</p>
+<p>For event subscribers, there are no surprises. They declare the
+lifecycle events in their <code>getSubscribedEvents</code> method and provide
+public methods that expect the relevant arguments.</p>
+<p>A lifecycle event listener looks like the following:</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">use</span> <span class="nx">Doctrine\Common\Persistence\Event\LifecycleEventArgs</span><span class="p">;</span>
+
+    <span class="k">class</span> <span class="nc">MyEventListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdate</span><span class="p">(</span><span class="nx">LifecycleEventArgs</span> <span class="nv">$args</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$entity</span> <span class="o">=</span> <span class="nv">$args</span><span class="o">-&gt;</span><span class="na">getObject</span><span class="p">();</span>
+            <span class="nv">$entityManager</span> <span class="o">=</span> <span class="nv">$args</span><span class="o">-&gt;</span><span class="na">getObjectManager</span><span class="p">();</span>
+
+            <span class="c1">// perhaps you only want to act on some &quot;Product&quot; entity</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$entity</span> <span class="nx">instanceof</span> <span class="nx">Product</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// do something with the Product</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>A lifecycle event subscriber may looks like this:</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">use</span> <span class="nx">Doctrine\ORM\Events</span><span class="p">;</span>
+    <span class="k">use</span> <span class="nx">Doctrine\Common\EventSubscriber</span><span class="p">;</span>
+    <span class="k">use</span> <span class="nx">Doctrine\Common\Persistence\Event\LifecycleEventArgs</span><span class="p">;</span>
+
+    <span class="k">class</span> <span class="nc">MyEventSubscriber</span> <span class="k">implements</span> <span class="nx">EventSubscriber</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">getSubscribedEvents</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="k">array</span><span class="p">(</span>
+                <span class="nx">Events</span><span class="o">::</span><span class="na">postUpdate</span><span class="p">,</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postUpdate</span><span class="p">(</span><span class="nx">LifecycleEventArgs</span> <span class="nv">$args</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$entity</span> <span class="o">=</span> <span class="nv">$args</span><span class="o">-&gt;</span><span class="na">getObject</span><span class="p">();</span>
+            <span class="nv">$entityManager</span> <span class="o">=</span> <span class="nv">$args</span><span class="o">-&gt;</span><span class="na">getObjectManager</span><span class="p">();</span>
+
+            <span class="c1">// perhaps you only want to act on some &quot;Product&quot; entity</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$entity</span> <span class="nx">instanceof</span> <span class="nx">Product</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// do something with the Product</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+</pre></div>
+
+
+<p>.. note::</p>
+<div class="highlight"><pre>Lifecycle events are triggered for all entities. It is the responsibility
+of the listeners and subscribers to check if the entity is of a type
+it wants to handle.
+</pre></div>
+
+
+<p>To register an event listener or subscriber, you have to hook it into the
+EventManager that is passed to the EntityManager factory:</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="nv">$eventManager</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">EventManager</span><span class="p">();</span>
+    <span class="nv">$eventManager</span><span class="o">-&gt;</span><span class="na">addEventListener</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="nx">Events</span><span class="o">::</span><span class="na">preUpdate</span><span class="p">),</span> <span class="k">new</span> <span class="nx">MyEventListener</span><span class="p">());</span>
+    <span class="nv">$eventManager</span><span class="o">-&gt;</span><span class="na">addEventSubscriber</span><span class="p">(</span><span class="k">new</span> <span class="nx">MyEventSubscriber</span><span class="p">());</span>
+
+    <span class="nv">$entityManager</span> <span class="o">=</span> <span class="nx">EntityManager</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$dbOpts</span><span class="p">,</span> <span class="nv">$config</span><span class="p">,</span> <span class="nv">$eventManager</span><span class="p">);</span>
+</pre></div>
+
+
+<p>You can also retrieve the event manager instance after the
+EntityManager was created:</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="nv">$entityManager</span><span class="o">-&gt;</span><span class="na">getEventManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">addEventListener</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="nx">Events</span><span class="o">::</span><span class="na">preUpdate</span><span class="p">),</span> <span class="k">new</span> <span class="nx">MyEventListener</span><span class="p">());</span>
+    <span class="nv">$entityManager</span><span class="o">-&gt;</span><span class="na">getEventManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">addEventSubscriber</span><span class="p">(</span><span class="k">new</span> <span class="nx">MyEventSubscriber</span><span class="p">());</span>
+</pre></div>
+
+
+<p>.. _reference-events-implementing-listeners:</p>
+<h2>Implementing Event Listeners</h2>
+<p>This section explains what is and what is not allowed during
+specific lifecycle events of the UnitOfWork. Although you get
+passed the EntityManager in all of these events, you have to follow
+these restrictions very carefully since operations in the wrong
+event may produce lots of different errors, such as inconsistent
+data and lost updates/persists/removes.</p>
+<p>For the described events that are also lifecycle callback events
+the restrictions apply as well, with the additional restriction
+that (prior to version 2.4) you do not have access to the
+EntityManager or UnitOfWork APIs inside these events.</p>
+<p>prePersist
+~~~~~~~~~~</p>
+<p>There are two ways for the <code>prePersist</code> event to be triggered.
+One is obviously when you call <code>EntityManager#persist()</code>. The
+event is also called for all cascaded associations.</p>
+<p>There is another way for <code>prePersist</code> to be called, inside the
+<code>flush()</code> method when changes to associations are computed and
+this association is marked as cascade persist. Any new entity found
+during this operation is also persisted and <code>prePersist</code> called
+on it. This is called "persistence by reachability".</p>
+<p>In both cases you get passed a <code>LifecycleEventArgs</code> instance
+which has access to the entity and the entity manager.</p>
+<p>The following restrictions apply to <code>prePersist</code>:</p>
+<ul>
+<li>If you are using a PrePersist Identity Generator such as
+   sequences the ID value will <em>NOT</em> be available within any
+   PrePersist events.</li>
+<li>Doctrine will not recognize changes made to relations in a prePersist
+   event. This includes modifications to
+   collections such as additions, removals or replacement.</li>
+</ul>
+<p>preRemove</p>
+<div class="highlight"><pre><span class="nx">The</span> <span class="err">``</span><span class="nx">preRemove</span><span class="err">``</span> <span class="nx">event</span> <span class="nx">is</span> <span class="nx">called</span> <span class="nx">on</span> <span class="nx">every</span> <span class="nx">entity</span> <span class="nx">when</span> <span class="nx">its</span> <span class="nx">passed</span>
+<span class="nx">to</span> <span class="nx">the</span> <span class="err">``</span><span class="nx">EntityManager</span><span class="err">#</span><span class="nx">remove</span><span class="p">()</span><span class="err">``</span> <span class="nx">method</span><span class="p">.</span> <span class="nx">It</span> <span class="nx">is</span> <span class="nx">cascaded</span> <span class="k">for</span> <span class="nx">all</span>
+<span class="nx">associations</span> <span class="nx">that</span> <span class="nx">are</span> <span class="nx">marked</span> <span class="nx">as</span> <span class="nx">cascade</span> <span class="k">delete</span><span class="p">.</span>
+
+<span class="nx">There</span> <span class="nx">are</span> <span class="nx">no</span> <span class="nx">restrictions</span> <span class="nx">to</span> <span class="nx">what</span> <span class="nx">methods</span> <span class="nx">can</span> <span class="nx">be</span> <span class="nx">called</span> <span class="nx">inside</span> <span class="nx">the</span>
+<span class="err">``</span><span class="nx">preRemove</span><span class="err">``</span> <span class="nx">event</span><span class="p">,</span> <span class="nx">except</span> <span class="nx">when</span> <span class="nx">the</span> <span class="nx">remove</span> <span class="nx">method</span> <span class="nx">itself</span> <span class="nx">was</span>
+<span class="nx">called</span> <span class="nx">during</span> <span class="nx">a</span> <span class="nx">flush</span> <span class="nx">operation</span><span class="p">.</span>
+
+<span class="nx">preFlush</span>
+<span class="o">~~~~~~~~</span>
+
+<span class="err">``</span><span class="nx">preFlush</span><span class="err">``</span> <span class="nx">is</span> <span class="nx">called</span> <span class="nx">at</span> <span class="err">``</span><span class="nx">EntityManager</span><span class="err">#</span><span class="nx">flush</span><span class="p">()</span><span class="err">``</span> <span class="nx">before</span>
+<span class="nx">anything</span> <span class="k">else</span><span class="p">.</span> <span class="err">``</span><span class="nx">EntityManager</span><span class="err">#</span><span class="nx">flush</span><span class="p">()</span><span class="err">``</span> <span class="nx">can</span> <span class="nx">be</span> <span class="nx">called</span> <span class="nx">safely</span>
+<span class="nx">inside</span> <span class="nx">its</span> <span class="nx">listeners</span><span class="p">.</span>
+
+<span class="err">```</span><span class="nx">php</span>
+
+    <span class="cp">&lt;?php</span>
+
+    <span class="k">use</span> <span class="nx">Doctrine\ORM\Event\PreFlushEventArgs</span><span class="p">;</span>
+
+    <span class="k">class</span> <span class="nc">PreFlushExampleListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preFlush</span><span class="p">(</span><span class="nx">PreFlushEventArgs</span> <span class="nv">$args</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="sb">```</span>
+
+<span class="sb">onFlush</span>
+<span class="sb">~~~~~~~</span>
+
+<span class="sb">OnFlush is a very powerful event. It is called inside</span>
+<span class="sb">``EntityManager#flush()`` after the changes to all the managed</span>
+<span class="sb">entities and their associations have been computed. This means, the</span>
+<span class="sb">``onFlush`` event has access to the sets of:</span>
+
+
+<span class="sb">-  Entities scheduled for insert</span>
+<span class="sb">-  Entities scheduled for update</span>
+<span class="sb">-  Entities scheduled for removal</span>
+<span class="sb">-  Collections scheduled for update</span>
+<span class="sb">-  Collections scheduled for removal</span>
+
+<span class="sb">To make use of the onFlush event you have to be familiar with the</span>
+<span class="sb">internal UnitOfWork API, which grants you access to the previously</span>
+<span class="sb">mentioned sets. See this example:</span>
+
+<span class="sb">```</span><span class="nx">php</span>
+
+    <span class="o">&lt;?</span><span class="nx">php</span>
+    <span class="k">class</span> <span class="nc">FlushExampleListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">onFlush</span><span class="p">(</span><span class="nx">OnFlushEventArgs</span> <span class="nv">$eventArgs</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$em</span> <span class="o">=</span> <span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">getEntityManager</span><span class="p">();</span>
+            <span class="nv">$uow</span> <span class="o">=</span> <span class="nv">$em</span><span class="o">-&gt;</span><span class="na">getUnitOfWork</span><span class="p">();</span>
+
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$uow</span><span class="o">-&gt;</span><span class="na">getScheduledEntityInsertions</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$entity</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="p">}</span>
+
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$uow</span><span class="o">-&gt;</span><span class="na">getScheduledEntityUpdates</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$entity</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="p">}</span>
+
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$uow</span><span class="o">-&gt;</span><span class="na">getScheduledEntityDeletions</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$entity</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="p">}</span>
+
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$uow</span><span class="o">-&gt;</span><span class="na">getScheduledCollectionDeletions</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$col</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="p">}</span>
+
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$uow</span><span class="o">-&gt;</span><span class="na">getScheduledCollectionUpdates</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$col</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="sb">```</span>
+
+<span class="sb">The following restrictions apply to the onFlush event:</span>
+
+
+<span class="sb">-  If you create and persist a new entity in ``onFlush``, then</span>
+<span class="sb">   calling ``EntityManager#persist()`` is not enough.</span>
+<span class="sb">   You have to execute an additional call to</span>
+<span class="sb">   ``$unitOfWork-&gt;computeChangeSet($classMetadata, $entity)``.</span>
+<span class="sb">-  Changing primitive fields or associations requires you to</span>
+<span class="sb">   explicitly trigger a re-computation of the changeset of the</span>
+<span class="sb">   affected entity. This can be done by calling</span>
+<span class="sb">   ``$unitOfWork-&gt;recomputeSingleEntityChangeSet($classMetadata, $entity)`</span><span class="err">`</span><span class="o">.</span>
+
+<span class="nx">postFlush</span>
+</pre></div>
+
+
+<p><code>postFlush</code> is called at the end of <code>EntityManager#flush()</code>.
+<code>EntityManager#flush()</code> can <strong>NOT</strong> be called safely inside its listeners.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+
+    <span class="k">use</span> <span class="nx">Doctrine\ORM\Event\PostFlushEventArgs</span><span class="p">;</span>
+
+    <span class="k">class</span> <span class="nc">PostFlushExampleListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postFlush</span><span class="p">(</span><span class="nx">PostFlushEventArgs</span> <span class="nv">$args</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>preUpdate
+~~~~~~~~~</p>
+<p>PreUpdate is the most restrictive to use event, since it is called
+right before an update statement is called for an entity inside the
+<code>EntityManager#flush()</code> method.</p>
+<p>Changes to associations of the updated entity are never allowed in
+this event, since Doctrine cannot guarantee to correctly handle
+referential integrity at this point of the flush operation. This
+event has a powerful feature however, it is executed with a
+<code>PreUpdateEventArgs</code> instance, which contains a reference to the
+computed change-set of this entity.</p>
+<p>This means you have access to all the fields that have changed for
+this entity with their old and new value. The following methods are
+available on the <code>PreUpdateEventArgs</code>:</p>
+<ul>
+<li><code>getEntity()</code> to get access to the actual entity.</li>
+<li><code>getEntityChangeSet()</code> to get a copy of the changeset array.
+   Changes to this returned array do not affect updating.</li>
+<li><code>hasChangedField($fieldName)</code> to check if the given field name
+   of the current entity changed.</li>
+<li><code>getOldValue($fieldName)</code> and <code>getNewValue($fieldName)</code> to
+   access the values of a field.</li>
+<li><code>setNewValue($fieldName, $value)</code> to change the value of a
+   field to be updated.</li>
+</ul>
+<p>A simple example for this event looks like:</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">NeverAliceOnlyBobListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdate</span><span class="p">(</span><span class="nx">PreUpdateEventArgs</span> <span class="nv">$eventArgs</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">getEntity</span><span class="p">()</span> <span class="nx">instanceof</span> <span class="nx">User</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">hasChangedField</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">getNewValue</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Alice&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">setNewValue</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;Bob&#39;</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>You could also use this listener to implement validation of all the
+fields that have changed. This is more efficient than using a
+lifecycle callback when there are expensive validations to call:</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">ValidCreditCardListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdate</span><span class="p">(</span><span class="nx">PreUpdateEventArgs</span> <span class="nv">$eventArgs</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">getEntity</span><span class="p">()</span> <span class="nx">instanceof</span> <span class="nx">Account</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">hasChangedField</span><span class="p">(</span><span class="s1">&#39;creditCard&#39;</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">validateCreditCard</span><span class="p">(</span><span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">getNewValue</span><span class="p">(</span><span class="s1">&#39;creditCard&#39;</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">private</span> <span class="k">function</span> <span class="nf">validateCreditCard</span><span class="p">(</span><span class="nv">$no</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// throw an exception to interrupt flush event. Transaction will be rolled back.</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>Restrictions for this event:</p>
+<ul>
+<li>Changes to associations of the passed entities are not
+   recognized by the flush operation anymore.</li>
+<li>Changes to fields of the passed entities are not recognized by
+   the flush operation anymore, use the computed change-set passed to
+   the event to modify primitive field values, e.g. use
+   <code>$eventArgs-&gt;setNewValue($field, $value);</code> as in the Alice to Bob example above.</li>
+<li>Any calls to <code>EntityManager#persist()</code> or
+   <code>EntityManager#remove()</code>, even in combination with the UnitOfWork
+   API are strongly discouraged and don't work as expected outside the
+   flush operation.</li>
+</ul>
+<p>postUpdate, postRemove, postPersist
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</p>
+<p>The three post events are called inside <code>EntityManager#flush()</code>.
+Changes in here are not relevant to the persistence in the
+database, but you can use these events to alter non-persistable items,
+like non-mapped fields, logging or even associated classes that are
+directly mapped by Doctrine.</p>
+<p>postLoad
+~~~~~~~~</p>
+<p>This event is called after an entity is constructed by the
+EntityManager.</p>
+<h2>Entity listeners</h2>
+<p>.. versionadded:: 2.4</p>
+<p>An entity listener is a lifecycle listener class used for an entity.</p>
+<ul>
+<li>The entity listener's mapping may be applied to an entity class or mapped superclass.</li>
+<li>
+<p>An entity listener is defined by mapping the entity class with the corresponding mapping.</p>
+<p>```php</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">MyProject\Entity</span><span class="p">;</span>
+
+<span class="sd">/** @Entity @EntityListeners({&quot;UserListener&quot;}) */</span>
+<span class="k">class</span> <span class="nc">User</span>
+<span class="p">{</span>
+    <span class="c1">// ....</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>```</p>
+<p>```xml</p>
+<div class="highlight"><pre><span class="nt">&lt;doctrine-mapping&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;MyProject\Entity\User&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;entity-listeners&gt;</span>
+            <span class="nt">&lt;entity-listener</span> <span class="na">class=</span><span class="s">&quot;UserListener&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/entity-listeners&gt;</span>
+        <span class="c">&lt;!-- .... --&gt;</span>
+    <span class="nt">&lt;/entity&gt;</span>
+<span class="nt">&lt;/doctrine-mapping&gt;</span>
+</pre></div>
+
+
+<p>```</p>
+<p>```yaml</p>
+<div class="highlight"><pre>MyProject\Entity\User:
+  type: entity
+  entityListeners:
+    UserListener:
+  # ....
+</pre></div>
+
+
+<p>```</p>
+</li>
+</ul>
+<p>.. _reference-entity-listeners:</p>
+<p>Entity listeners class
+~~~~~~~~~~~~~~~~~~~~~~</p>
+<p>An <code>Entity Listener</code> could be any class, by default it should be a class with a no-arg constructor.</p>
+<ul>
+<li>Different from :ref:<code>reference-events-implementing-listeners</code> an <code>Entity Listener</code> is invoked just to the specified entity</li>
+<li>An entity listener method receives two arguments, the entity instance and the lifecycle event.</li>
+<li>The callback method can be defined by naming convention or specifying a method mapping.</li>
+<li>When a listener mapping is not given the parser will use the naming convention to look for a matching method,
+  e.g. it will look for a public <code>preUpdate()</code> method if you are listening to the <code>preUpdate</code> event.</li>
+<li>When a listener mapping is given the parser will not look for any methods using the naming convention.</li>
+</ul>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">UserListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdate</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">PreUpdateEventArgs</span> <span class="nv">$event</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// Do something on pre update.</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>To define a specific event listener method (one that does not follow the naming convention)
+you need to map the listener method using the event type mapping:</p>
+<p>.. configuration-block::</p>
+<div class="highlight"><pre><span class="err">```</span><span class="nx">php</span>
+
+    <span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">UserListener</span>
+    <span class="p">{</span>
+        <span class="sd">/** @PrePersist */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">prePersistHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">LifecycleEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PostPersist */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postPersistHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">LifecycleEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PreUpdate */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdateHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">PreUpdateEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PostUpdate */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postUpdateHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">LifecycleEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PostRemove */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postRemoveHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">LifecycleEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PreRemove */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preRemoveHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">LifecycleEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PreFlush */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preFlushHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">PreFlushEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+
+        <span class="sd">/** @PostLoad */</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">postLoadHandler</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">LifecycleEventArgs</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// ... }</span>
+    <span class="p">}</span>
+<span class="sb">```</span>
+
+<span class="sb">```</span><span class="nx">xml</span>
+
+    <span class="o">&lt;</span><span class="nx">doctrine</span><span class="o">-</span><span class="nx">mapping</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">entity</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;MyProject\Entity\User&quot;</span><span class="o">&gt;</span>
+             <span class="o">&lt;</span><span class="nx">entity</span><span class="o">-</span><span class="nx">listeners</span><span class="o">&gt;</span>
+                <span class="o">&lt;</span><span class="nx">entity</span><span class="o">-</span><span class="nx">listener</span> <span class="nx">class</span><span class="o">=</span><span class="s2">&quot;UserListener&quot;</span><span class="o">&gt;</span>
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;preFlush&quot;</span>      <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;preFlushHandler&quot;</span><span class="o">/&gt;</span>
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;postLoad&quot;</span>      <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;postLoadHandler&quot;</span><span class="o">/&gt;</span>
+
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;postPersist&quot;</span>   <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;postPersistHandler&quot;</span><span class="o">/&gt;</span>
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;prePersist&quot;</span>    <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;prePersistHandler&quot;</span><span class="o">/&gt;</span>
+
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;postUpdate&quot;</span>    <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;postUpdateHandler&quot;</span><span class="o">/&gt;</span>
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;preUpdate&quot;</span>     <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;preUpdateHandler&quot;</span><span class="o">/&gt;</span>
+
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;postRemove&quot;</span>    <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;postRemoveHandler&quot;</span><span class="o">/&gt;</span>
+                    <span class="o">&lt;</span><span class="nx">lifecycle</span><span class="o">-</span><span class="nx">callback</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;preRemove&quot;</span>     <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;preRemoveHandler&quot;</span><span class="o">/&gt;</span>
+                <span class="o">&lt;/</span><span class="nx">entity</span><span class="o">-</span><span class="nx">listener</span><span class="o">&gt;</span>
+            <span class="o">&lt;/</span><span class="nx">entity</span><span class="o">-</span><span class="nx">listeners</span><span class="o">&gt;</span>
+            <span class="o">&lt;!--</span> <span class="o">....</span> <span class="o">--&gt;</span>
+        <span class="o">&lt;/</span><span class="nx">entity</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="nx">doctrine</span><span class="o">-</span><span class="nx">mapping</span><span class="o">&gt;</span>
+<span class="sb">```</span>
+
+<span class="sb">```</span><span class="nx">yaml</span>
+
+    <span class="nx">MyProject\Entity\User</span><span class="o">:</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="nx">entity</span>
+      <span class="nx">entityListeners</span><span class="o">:</span>
+        <span class="nx">UserListener</span><span class="o">:</span>
+          <span class="nx">preFlush</span><span class="o">:</span> <span class="p">[</span><span class="nx">preFlushHandler</span><span class="p">]</span>
+          <span class="nx">postLoad</span><span class="o">:</span> <span class="p">[</span><span class="nx">postLoadHandler</span><span class="p">]</span>
+
+          <span class="nx">postPersist</span><span class="o">:</span> <span class="p">[</span><span class="nx">postPersistHandler</span><span class="p">]</span>
+          <span class="nx">prePersist</span><span class="o">:</span> <span class="p">[</span><span class="nx">prePersistHandler</span><span class="p">]</span>
+
+          <span class="nx">postUpdate</span><span class="o">:</span> <span class="p">[</span><span class="nx">postUpdateHandler</span><span class="p">]</span>
+          <span class="nx">preUpdate</span><span class="o">:</span> <span class="p">[</span><span class="nx">preUpdateHandler</span><span class="p">]</span>
+
+          <span class="nx">postRemove</span><span class="o">:</span> <span class="p">[</span><span class="nx">postRemoveHandler</span><span class="p">]</span>
+          <span class="nx">preRemove</span><span class="o">:</span> <span class="p">[</span><span class="nx">preRemoveHandler</span><span class="p">]</span>
+      <span class="c1"># ....</span>
+<span class="sb">``</span><span class="err">`</span>
+</pre></div>
+
+
+<p>Entity listeners resolver
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Doctrine invokes the listener resolver to get the listener instance.</p>
+<ul>
+<li>A resolver allows you register a specific entity listener instance.</li>
+<li>You can also implement your own resolver by extending <code>Doctrine\ORM\Mapping\DefaultEntityListenerResolver</code> or implementing <code>Doctrine\ORM\Mapping\EntityListenerResolver</code></li>
+</ul>
+<p>Specifying an entity listener instance :</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="c1">// User.php</span>
+
+    <span class="sd">/** @Entity @EntityListeners({&quot;UserListener&quot;}) */</span>
+    <span class="k">class</span> <span class="nc">User</span>
+    <span class="p">{</span>
+        <span class="c1">// ....</span>
+    <span class="p">}</span>
+
+    <span class="c1">// UserListener.php</span>
+    <span class="k">class</span> <span class="nc">UserListener</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">MyService</span> <span class="nv">$service</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">service</span> <span class="o">=</span> <span class="nv">$service</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">preUpdate</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">,</span> <span class="nx">PreUpdateEventArgs</span> <span class="nv">$event</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">service</span><span class="o">-&gt;</span><span class="na">doSomething</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// register a entity listener.</span>
+    <span class="nv">$listener</span> <span class="o">=</span> <span class="nv">$container</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;user_listener&#39;</span><span class="p">);</span>
+    <span class="nv">$em</span><span class="o">-&gt;</span><span class="na">getConfiguration</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getEntityListenerResolver</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">register</span><span class="p">(</span><span class="nv">$listener</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Implementing your own resolver :</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">MyEntityListenerResolver</span> <span class="k">extends</span> <span class="nx">\Doctrine\ORM\Mapping\DefaultEntityListenerResolver</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nv">$container</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">container</span> <span class="o">=</span> <span class="nv">$container</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">resolve</span><span class="p">(</span><span class="nv">$className</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// resolve the service id by the given class name;</span>
+            <span class="nv">$id</span> <span class="o">=</span> <span class="s1">&#39;user_listener&#39;</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">container</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$id</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// configure the listener resolver.</span>
+    <span class="nv">$em</span><span class="o">-&gt;</span><span class="na">getConfiguration</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">setEntityListenerResolver</span><span class="p">(</span><span class="nv">$container</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;my_resolver&#39;</span><span class="p">));</span>
+</pre></div>
+
+
+<h2>Load ClassMetadata Event</h2>
+<p>When the mapping information for an entity is read, it is populated
+in to a <code>ClassMetadataInfo</code> instance. You can hook in to this
+process and manipulate the instance.</p>
+<div class="highlight"><pre><span class="x">    </span><span class="cp">&lt;?php</span>
+    <span class="nv">$test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TestEvent</span><span class="p">();</span>
+    <span class="nv">$metadataFactory</span> <span class="o">=</span> <span class="nv">$em</span><span class="o">-&gt;</span><span class="na">getMetadataFactory</span><span class="p">();</span>
+    <span class="nv">$evm</span> <span class="o">=</span> <span class="nv">$em</span><span class="o">-&gt;</span><span class="na">getEventManager</span><span class="p">();</span>
+    <span class="nv">$evm</span><span class="o">-&gt;</span><span class="na">addEventListener</span><span class="p">(</span><span class="nx">Events</span><span class="o">::</span><span class="na">loadClassMetadata</span><span class="p">,</span> <span class="nv">$test</span><span class="p">);</span>
+
+    <span class="k">class</span> <span class="nc">TestEvent</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">function</span> <span class="nf">loadClassMetadata</span><span class="p">(</span><span class="nx">\Doctrine\ORM\Event\LoadClassMetadataEventArgs</span> <span class="nv">$eventArgs</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$classMetadata</span> <span class="o">=</span> <span class="nv">$eventArgs</span><span class="o">-&gt;</span><span class="na">getClassMetadata</span><span class="p">();</span>
+            <span class="nv">$fieldMapping</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+                <span class="s1">&#39;fieldName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;about&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;length&#39;</span> <span class="o">=&gt;</span> <span class="mi">255</span>
+            <span class="p">);</span>
+            <span class="nv">$classMetadata</span><span class="o">-&gt;</span><span class="na">mapField</span><span class="p">(</span><span class="nv">$fieldMapping</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre></div>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://about.me/royopa/">About Me</a></li>
+                            <li><a href="http://www.royopa.url.ph/">Royopa Blog in PHP</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://twitter.com/royopa">Twitter</a></li>
+                            <li><a href="https://www.facebook.com/royopa">Facebook</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

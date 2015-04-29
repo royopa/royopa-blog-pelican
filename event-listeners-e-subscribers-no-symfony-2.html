@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+        <meta charset="utf-8" />
+        <title>Event Listeners e Subscribers no Symfony 2</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Royopa Blog </a></h1>
+                <nav><ul>
+                    <li><a href="/category/dspace.html">DSpace</a></li>
+                    <li><a href="/category/finance.html">Finance</a></li>
+                    <li><a href="/category/git.html">GIT</a></li>
+                    <li class="active"><a href="/category/php.html">PHP</a></li>
+                    <li><a href="/category/solid.html">SOLID</a></li>
+                </ul>
+                </nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/event-listeners-e-subscribers-no-symfony-2.html" rel="bookmark"
+           title="Permalink to Event Listeners e Subscribers no Symfony 2">Event Listeners e Subscribers no Symfony 2</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <span>Qui 25 setembro 2014</span>
+
+</footer><!-- /.post-info -->      <p>Doctrine packages a rich event system that fires events when almost anything
+happens inside the system. For you, this means that you can create arbitrary
+:doc:<code>services &lt;/book/service_container&gt;</code> and tell Doctrine to notify those
+objects whenever a certain action (e.g. <code>prePersist</code>) happens within Doctrine.
+This could be useful, for example, to create an independent search index
+whenever an object in your database is saved.</p>
+<p>Doctrine defines two types of objects that can listen to Doctrine events:
+listeners and subscribers. Both are very similar, but listeners are a bit
+more straightforward. For more, see <code>The Event System</code>_ on Doctrine's website.</p>
+<p>The Doctrine website also explains all existing events that can be listened to.</p>
+<h2>Configuring the Listener/Subscriber</h2>
+<p>To register a service to act as an event listener or subscriber you just have
+to :ref:<code>tag &lt;book-service-container-tags&gt;</code> it with the appropriate name. Depending
+on your use-case, you can hook a listener into every DBAL connection and ORM
+entity manager or just into one specific DBAL connection and all the entity
+managers that use this connection.</p>
+<p>.. configuration-block::</p>
+<div class="highlight"><pre><span class="p">..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">yaml</span>
+
+    <span class="l-Scalar-Plain">doctrine</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">dbal</span><span class="p-Indicator">:</span>
+            <span class="l-Scalar-Plain">default_connection</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">default</span>
+            <span class="l-Scalar-Plain">connections</span><span class="p-Indicator">:</span>
+                <span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span>
+                    <span class="l-Scalar-Plain">driver</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pdo_sqlite</span>
+                    <span class="l-Scalar-Plain">memory</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+
+    <span class="l-Scalar-Plain">services</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">my.listener</span><span class="p-Indicator">:</span>
+            <span class="l-Scalar-Plain">class</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Acme\SearchBundle\EventListener\SearchIndexer</span>
+            <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+                <span class="p-Indicator">-</span> <span class="p-Indicator">{</span> <span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">doctrine.event_listener</span><span class="p-Indicator">,</span> <span class="nv">event</span><span class="p-Indicator">:</span> <span class="nv">postPersist</span> <span class="p-Indicator">}</span>
+        <span class="l-Scalar-Plain">my.listener2</span><span class="p-Indicator">:</span>
+            <span class="l-Scalar-Plain">class</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Acme\SearchBundle\EventListener\SearchIndexer2</span>
+            <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+                <span class="p-Indicator">-</span> <span class="p-Indicator">{</span> <span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">doctrine.event_listener</span><span class="p-Indicator">,</span> <span class="nv">event</span><span class="p-Indicator">:</span> <span class="nv">postPersist</span><span class="p-Indicator">,</span> <span class="nv">connection</span><span class="p-Indicator">:</span> <span class="nv">default</span> <span class="p-Indicator">}</span>
+        <span class="l-Scalar-Plain">my.subscriber</span><span class="p-Indicator">:</span>
+            <span class="l-Scalar-Plain">class</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Acme\SearchBundle\EventListener\SearchIndexerSubscriber</span>
+            <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+                <span class="p-Indicator">-</span> <span class="p-Indicator">{</span> <span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">doctrine.event_subscriber</span><span class="p-Indicator">,</span> <span class="nv">connection</span><span class="p-Indicator">:</span> <span class="nv">default</span> <span class="p-Indicator">}</span>
+
+<span class="p">..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">xml</span>
+
+    <span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span>
+    <span class="nt">&lt;container</span> <span class="na">xmlns=</span><span class="s">&quot;http://symfony.com/schema/dic/services&quot;</span>
+        <span class="na">xmlns:doctrine=</span><span class="s">&quot;http://symfony.com/schema/dic/doctrine&quot;</span><span class="nt">&gt;</span>
+
+        <span class="nt">&lt;doctrine:config&gt;</span>
+            <span class="nt">&lt;doctrine:dbal</span> <span class="na">default-connection=</span><span class="s">&quot;default&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;doctrine:connection</span> <span class="na">driver=</span><span class="s">&quot;pdo_sqlite&quot;</span> <span class="na">memory=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/doctrine:dbal&gt;</span>
+        <span class="nt">&lt;/doctrine:config&gt;</span>
+
+        <span class="nt">&lt;services&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">id=</span><span class="s">&quot;my.listener&quot;</span> <span class="na">class=</span><span class="s">&quot;Acme\SearchBundle\EventListener\SearchIndexer&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;tag</span> <span class="na">name=</span><span class="s">&quot;doctrine.event_listener&quot;</span> <span class="na">event=</span><span class="s">&quot;postPersist&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/service&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">id=</span><span class="s">&quot;my.listener2&quot;</span> <span class="na">class=</span><span class="s">&quot;Acme\SearchBundle\EventListener\SearchIndexer2&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;tag</span> <span class="na">name=</span><span class="s">&quot;doctrine.event_listener&quot;</span> <span class="na">event=</span><span class="s">&quot;postPersist&quot;</span> <span class="na">connection=</span><span class="s">&quot;default&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/service&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">id=</span><span class="s">&quot;my.subscriber&quot;</span> <span class="na">class=</span><span class="s">&quot;Acme\SearchBundle\EventListener\SearchIndexerSubscriber&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;tag</span> <span class="na">name=</span><span class="s">&quot;doctrine.event_subscriber&quot;</span> <span class="na">connection=</span><span class="s">&quot;default&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/service&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
+    <span class="nt">&lt;/container&gt;</span>
+
+<span class="p">..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">php</span>
+
+    <span class="x">use Symfony\Component\DependencyInjection\Definition;</span>
+
+    <span class="x">$container-&gt;loadFromExtension(&#39;doctrine&#39;, array(</span>
+    <span class="x">    &#39;dbal&#39; =&gt; array(</span>
+    <span class="x">        &#39;default_connection&#39; =&gt; &#39;default&#39;,</span>
+    <span class="x">        &#39;connections&#39; =&gt; array(</span>
+    <span class="x">            &#39;default&#39; =&gt; array(</span>
+    <span class="x">                &#39;driver&#39; =&gt; &#39;pdo_sqlite&#39;,</span>
+    <span class="x">                &#39;memory&#39; =&gt; true,</span>
+    <span class="x">            ),</span>
+    <span class="x">        ),</span>
+    <span class="x">    ),</span>
+    <span class="x">));</span>
+
+    <span class="x">$container</span>
+    <span class="x">    -&gt;setDefinition(</span>
+    <span class="x">        &#39;my.listener&#39;,</span>
+    <span class="x">        new Definition(&#39;Acme\SearchBundle\EventListener\SearchIndexer&#39;)</span>
+    <span class="x">    )</span>
+    <span class="x">    -&gt;addTag(&#39;doctrine.event_listener&#39;, array(&#39;event&#39; =&gt; &#39;postPersist&#39;))</span>
+    <span class="x">;</span>
+    <span class="x">$container</span>
+    <span class="x">    -&gt;setDefinition(</span>
+    <span class="x">        &#39;my.listener2&#39;,</span>
+    <span class="x">        new Definition(&#39;Acme\SearchBundle\EventListener\SearchIndexer2&#39;)</span>
+    <span class="x">    )</span>
+    <span class="x">    -&gt;addTag(&#39;doctrine.event_listener&#39;, array(&#39;event&#39; =&gt; &#39;postPersist&#39;, &#39;connection&#39; =&gt; &#39;default&#39;))</span>
+    <span class="x">;</span>
+    <span class="x">$container</span>
+    <span class="x">    -&gt;setDefinition(</span>
+    <span class="x">        &#39;my.subscriber&#39;,</span>
+    <span class="x">        new Definition(&#39;Acme\SearchBundle\EventListener\SearchIndexerSubscriber&#39;)</span>
+    <span class="x">    )</span>
+    <span class="x">    -&gt;addTag(&#39;doctrine.event_subscriber&#39;, array(&#39;connection&#39; =&gt; &#39;default&#39;))</span>
+    <span class="x">;</span>
+</pre></div>
+
+
+<h2>Creating the Listener Class</h2>
+<p>In the previous example, a service <code>my.listener</code> was configured as a Doctrine
+listener on the event <code>postPersist</code>. The class behind that service must have
+a <code>postPersist</code> method, which will be called when the event is dispatched::</p>
+<div class="highlight"><pre><span class="c1">// src/Acme/SearchBundle/EventListener/SearchIndexer.php</span>
+<span class="nx">namespace</span> <span class="nx">Acme</span><span class="err">\</span><span class="nx">SearchBundle</span><span class="err">\</span><span class="nx">EventListener</span><span class="p">;</span>
+
+<span class="nx">use</span> <span class="nx">Doctrine</span><span class="err">\</span><span class="nx">ORM</span><span class="err">\</span><span class="nx">Event</span><span class="err">\</span><span class="nx">LifecycleEventArgs</span><span class="p">;</span>
+<span class="nx">use</span> <span class="nx">Acme</span><span class="err">\</span><span class="nx">StoreBundle</span><span class="err">\</span><span class="nx">Entity</span><span class="err">\</span><span class="nx">Product</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">SearchIndexer</span>
+<span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">postPersist</span><span class="p">(</span><span class="nx">LifecycleEventArgs</span> <span class="nx">$args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">$entity</span> <span class="o">=</span> <span class="nx">$args</span><span class="o">-&gt;</span><span class="nx">getEntity</span><span class="p">();</span>
+        <span class="nx">$entityManager</span> <span class="o">=</span> <span class="nx">$args</span><span class="o">-&gt;</span><span class="nx">getEntityManager</span><span class="p">();</span>
+
+        <span class="c1">// perhaps you only want to act on some &quot;Product&quot; entity</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">$entity</span> <span class="k">instanceof</span> <span class="nx">Product</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">// ... do something with the Product</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>In each event, you have access to a <code>LifecycleEventArgs</code> object, which
+gives you access to both the entity object of the event and the entity manager
+itself.</p>
+<p>One important thing to notice is that a listener will be listening for <em>all</em>
+entities in your application. So, if you're interested in only handling a
+specific type of entity (e.g. a <code>Product</code> entity but not a <code>BlogPost</code>
+entity), you should check for the entity's class type in your method
+(as shown above).</p>
+<p>.. tip::</p>
+<div class="highlight"><pre>In Doctrine 2.4, a feature called Entity Listeners was introduced.
+It is a lifecycle listener class used for an entity. You can read
+about it in `the Doctrine Documentation`_.
+</pre></div>
+
+
+<h2>Creating the Subscriber Class</h2>
+<p>A Doctrine event subscriber must implement the <code>Doctrine\Common\EventSubscriber</code>
+interface and have an event method for each event it subscribes to::</p>
+<div class="highlight"><pre><span class="c1">// src/Acme/SearchBundle/EventListener/SearchIndexerSubscriber.php</span>
+<span class="nx">namespace</span> <span class="nx">Acme</span><span class="err">\</span><span class="nx">SearchBundle</span><span class="err">\</span><span class="nx">EventListener</span><span class="p">;</span>
+
+<span class="nx">use</span> <span class="nx">Doctrine</span><span class="err">\</span><span class="nx">Common</span><span class="err">\</span><span class="nx">EventSubscriber</span><span class="p">;</span>
+<span class="nx">use</span> <span class="nx">Doctrine</span><span class="err">\</span><span class="nx">ORM</span><span class="err">\</span><span class="nx">Event</span><span class="err">\</span><span class="nx">LifecycleEventArgs</span><span class="p">;</span>
+<span class="c1">// for Doctrine 2.4: Doctrine\Common\Persistence\Event\LifecycleEventArgs;</span>
+<span class="nx">use</span> <span class="nx">Acme</span><span class="err">\</span><span class="nx">StoreBundle</span><span class="err">\</span><span class="nx">Entity</span><span class="err">\</span><span class="nx">Product</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">SearchIndexerSubscriber</span> <span class="kr">implements</span> <span class="nx">EventSubscriber</span>
+<span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">getSubscribedEvents</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">array</span><span class="p">(</span>
+            <span class="s1">&#39;postPersist&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;postUpdate&#39;</span><span class="p">,</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">postUpdate</span><span class="p">(</span><span class="nx">LifecycleEventArgs</span> <span class="nx">$args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">$this</span><span class="o">-&gt;</span><span class="nx">index</span><span class="p">(</span><span class="nx">$args</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">postPersist</span><span class="p">(</span><span class="nx">LifecycleEventArgs</span> <span class="nx">$args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">$this</span><span class="o">-&gt;</span><span class="nx">index</span><span class="p">(</span><span class="nx">$args</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">index</span><span class="p">(</span><span class="nx">LifecycleEventArgs</span> <span class="nx">$args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">$entity</span> <span class="o">=</span> <span class="nx">$args</span><span class="o">-&gt;</span><span class="nx">getEntity</span><span class="p">();</span>
+        <span class="nx">$entityManager</span> <span class="o">=</span> <span class="nx">$args</span><span class="o">-&gt;</span><span class="nx">getEntityManager</span><span class="p">();</span>
+
+        <span class="c1">// perhaps you only want to act on some &quot;Product&quot; entity</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">$entity</span> <span class="k">instanceof</span> <span class="nx">Product</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">// ... do something with the Product</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>.. tip::</p>
+<div class="highlight"><pre>Doctrine event subscribers can not return a flexible array of methods to
+call for the events like the :ref:`Symfony event subscriber &lt;event_dispatcher-using-event-subscribers&gt;`
+can. Doctrine event subscribers must return a simple array of the event
+names they subscribe to. Doctrine will then expect methods on the subscriber
+with the same name as each subscribed event, just as when using an event listener.
+</pre></div>
+
+
+<p>For a full reference, see chapter <code>The Event System</code>_ in the Doctrine documentation.</p>
+<p>.. <em><code>The Event System</code>: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/events.html
+.. </em><code>the Doctrine Documentation</code>: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/events.html#entity-listeners</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://about.me/royopa/">About Me</a></li>
+                            <li><a href="http://www.royopa.url.ph/">Royopa Blog in PHP</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://twitter.com/royopa">Twitter</a></li>
+                            <li><a href="https://www.facebook.com/royopa">Facebook</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

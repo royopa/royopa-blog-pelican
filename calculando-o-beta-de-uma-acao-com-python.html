@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+        <meta charset="utf-8" />
+        <title>Calculando o Beta de uma ação com Python</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Royopa Blog </a></h1>
+                <nav><ul>
+                    <li><a href="/category/dspace.html">DSpace</a></li>
+                    <li class="active"><a href="/category/finance.html">Finance</a></li>
+                    <li><a href="/category/git.html">GIT</a></li>
+                    <li><a href="/category/php.html">PHP</a></li>
+                    <li><a href="/category/solid.html">SOLID</a></li>
+                </ul>
+                </nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/calculando-o-beta-de-uma-acao-com-python.html" rel="bookmark"
+           title="Permalink to Calculando o Beta de uma ação com Python">Calculando o Beta de uma ação com Python</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <span>Sex 24 abril 2015</span>
+
+</footer><!-- /.post-info -->      <p>Tradução e adaptação do artigo <a href="https://composmachina.com/blog/2013/03/calculating-portfolio-beta-with-python/">Calculating Portfolio Beta with Python</a> do <a href="https://composmachina.com/blog/">Dave Tucker</a>.</p>
+<h2>A teoria</h2>
+<p>O Índice Beta é um indicador que mede a sensibilidade de um ativo em relação ao comportamento de uma carteira que represente o mercado.</p>
+<p>É a relação entre a variação do retorno de uma ação (ativo) e o Ibovespa (mercado), por exemplo.</p>
+<p>Portanto, o Índice Beta é uma medida do risco que um investidor está exposto ao investir em um ativo em particular em comparação com o mercado como um todo.</p>
+<p>A fórmula do Índice Beta é bem simples:</p>
+<p>Beta = Covariância entre o Retorno do Ativo e do Mercado / Variância do Retorno do Mercado</p>
+<p>Ou desta maneira:</p>
+<p><img alt="Fórmula do Índice Beta" src="http://hcinvestimentos.com/wp-content/uploads/2011/12/formula-beta.png" title="Fórmula do Índice Beta" /></p>
+<p>onde:</p>
+<p>βa = Beta</p>
+<p>ra = Retorno do Ativo</p>
+<p>rp = Retorno do Portfólio (Também pode ser usado como rm = Retorno do Mercado)</p>
+<p>O coeficiente β é usado para medir o risco não-diversificável, isto é, fatores de mercado que afetam todas as empresas, como guerra, inflação, crises internacionais, etc. Ou seja, quanto o ativo está sujeito às variações não controláveis do mercado e do ambiente. É um índice que mede a relação entre o retorno de um ativo e o retorno do mercado. Desta forma, o prêmio por risco será sempre multiplicado por este coeficiente, exigindo um prêmio maior por risco quanto maior a variação do ativo em relação à carteira de mercado.</p>
+<p>O beta da carteira de ações padrão, IBOVESPA, é sempre igual a 1, uma vez que ela é a base para o cálculo comparativo. O beta desta carteira é o beta médio de todos os títulos disponíveis. Desta forma, concluímos:</p>
+<p>β = 1 Ativo médio.</p>
+<p>Sua variação tende a acompanhar perfeitamente o mercado. Quando o IBOVESPA valoriza 5%, o ativo valoriza na mesma proporção.</p>
+<p>β &lt; 1 Ativo defensivo.</p>
+<p>Possui oscilações inferiores ao mercado e no mesmo sentido. Quando o IBOVESPA valoriza 5%, o ativo tende a valorizar menos do que 5%.</p>
+<p>β &gt; 1 Ativo agressivo.</p>
+<p>Possui oscilações maiores do que o mercado e no mesmo sentido. Por exemplo, uma ação com β=2,0 tende a valorizar/desvalorizar o dobro do mercado (IBOVESPA).</p>
+<p>Suponha-se que seja necessário fazer a escolha entre três ações que farão parte de um portfólio agressivo de médio prazo (até 1 ano). As ações são: VALE5, TNLP4 e ELPL5. Iremos determinar o risco do ativo a partir do índice beta.</p>
+<p>Considere-se, para este exemplo, que o mercado encontra-se em alta, com boas perspectivas para o próximo ano.</p>
+<p>Analisando a explicação sobre o índice beta fornecida acima, concluímos que devemos escolher ativos com betas superiores a 1, pois pertencem a ativos que possuem oscilações maiores do que a carteira. Tanto positivamente quanto negativamente.</p>
+<p>O próximo passo é observar o período de análise do β. Este deve estar alinhado com a estratégia de investimento, isto é, para um investimento de médio prazo, devemos escolher o β de um período similar.</p>
+<p>Fontes:
+<a href="http://hcinvestimentos.com/2011/12/20/indice-beta/">O que é Índice Beta?</a>
+<a href="http://pt.wikipedia.org/wiki/%C3%8Dndice_beta">Wikipédia</a></p>
+<h2>Vamos a programação</h2>
+<p>O código a seguir usa Python3 e o <a href="http://numpy.scipy.org/">Numpy</a>, pacote para a linguagem Python que suporta arrays e matrizes multidimensionais, possuindo uma larga coleção de funções matemáticas para trabalhar com estas estruturas.</p>
+<div class="highlight"><pre><span class="c">#!/usr/bin/python3</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+<span class="kn">import</span> <span class="nn">Quandl</span>
+
+
+<span class="c"># Faz a consulta de dados históricos do Quandl e retorna um array Numpy</span>
+<span class="k">def</span> <span class="nf">get_prices</span><span class="p">(</span><span class="n">stock</span><span class="p">,</span> <span class="n">startDate</span><span class="p">,</span> <span class="n">endDate</span><span class="p">):</span>
+    <span class="c"># Retorna os Ãºltimos 252 registros de cotações</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">Quandl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">stock</span><span class="p">,</span> <span class="n">trim_start</span><span class="o">=</span><span class="n">startDate</span><span class="p">,</span>
+        <span class="n">trim_end</span><span class="o">=</span><span class="n">endDate</span><span class="p">,</span>
+        <span class="n">returns</span><span class="o">=</span><span class="s">&quot;numpy&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="c"># Verifica se existe datas faltando entre dados históricos da ação e de mercado</span>
+<span class="k">def</span> <span class="nf">check_missing_date_prices</span><span class="p">(</span><span class="n">stock_prices</span><span class="p">,</span> <span class="n">market_prices</span><span class="p">):</span>
+    <span class="c"># transforma os dados históricos num array com de datas de preços</span>
+    <span class="n">stock_dates</span> <span class="o">=</span> <span class="n">get_datas_by_prices</span><span class="p">(</span><span class="n">stock_prices</span><span class="p">)</span>
+    <span class="c"># transforma os dados históricos num array com de datas de mercdo</span>
+    <span class="n">market_dates</span> <span class="o">=</span> <span class="n">get_datas_by_prices</span><span class="p">(</span><span class="n">market_prices</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">stock_date</span> <span class="ow">in</span> <span class="n">stock_dates</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">stock_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">market_dates</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Data não existe nos dados de mercado: &#39;</span><span class="p">,</span> <span class="n">stock_date</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">market_date</span> <span class="ow">in</span> <span class="n">market_dates</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">market_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stock_dates</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Data não existe nos dados da ação: &#39;</span><span class="p">,</span> <span class="n">market_date</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="c"># Transforma o array de preços retornados pelo Quantl num array de datas</span>
+<span class="k">def</span> <span class="nf">get_datas_by_prices</span><span class="p">(</span><span class="n">prices</span><span class="p">):</span>
+
+    <span class="c"># array com as datas que serão armazenadas</span>
+    <span class="n">datas</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c"># Percorre cada linha (ou seja, dia a dia)</span>
+    <span class="k">for</span> <span class="n">price</span> <span class="ow">in</span> <span class="n">prices</span><span class="p">:</span>
+        <span class="c"># Adiciona o elemento data no array</span>
+        <span class="n">datas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">price</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c"># Retorna os resultados</span>
+    <span class="k">return</span> <span class="n">datas</span>
+
+
+<span class="c"># Transforma o array de preços retornados pelo Quantl</span>
+<span class="c"># num array Numpy somente com os preços de fechamento (index)</span>
+<span class="k">def</span> <span class="nf">get_closing_prices</span><span class="p">(</span><span class="n">prices</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+
+    <span class="c"># preços de fechamento que serão os preços de fechamento diÃ¡rios</span>
+    <span class="n">closing_prices</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c"># Percorre cada linha (ou seja, dia a dia)</span>
+    <span class="k">for</span> <span class="n">price</span> <span class="ow">in</span> <span class="n">prices</span><span class="p">:</span>
+        <span class="c"># Adiciona o elemento preço de fechamento no array, depois</span>
+        <span class="c"># de convertÃª-lo para float</span>
+        <span class="n">closing_prices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">price</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
+
+    <span class="c"># Retorna os resultados como um array Numpy</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">closing_prices</span><span class="p">)</span>
+
+
+<span class="c"># Transforma o array de preços de fechamento num array de retornos</span>
+<span class="c"># (preço atual / preço dia anterior - 1)</span>
+<span class="k">def</span> <span class="nf">get_returns_prices</span><span class="p">(</span><span class="n">closing_prices</span><span class="p">,</span> <span class="n">lenght</span><span class="p">):</span>
+
+    <span class="c"># Cria arrays zerados que serão preenchidos com os retornos dos preços.</span>
+    <span class="c"># Os dados de retorno sempre serão uma unidade menor do que os arrays</span>
+    <span class="c"># originais</span>
+    <span class="n">returns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lenght</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c"># Percorre cada preço dado</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lenght</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c"># O retorno é igual ao preço atual dividido pelo preço anterior menos 1.</span>
+        <span class="c"># Devido a isso, vamos sempre começar com o segundo preço</span>
+        <span class="n">returns</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">closing_prices</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">closing_prices</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c"># Retorna os resultados como um array Numpy</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span>
+
+
+<span class="c"># Calcula o beta de uma ação dados os preços bem como os preços para o mercado</span>
+<span class="c"># como um todo (como um índice, Bovespa por exemplo).</span>
+<span class="c"># Os dois arrays devem ter o mesmo tamanho.</span>
+<span class="c"># O resultado é o beta arredondado com duas casas decimais</span>
+<span class="k">def</span> <span class="nf">calc_beta</span><span class="p">(</span><span class="n">prices_stock</span><span class="p">,</span> <span class="n">prices_market</span><span class="p">):</span>
+
+    <span class="c"># Calcula e armazena o tamanho dos arrays porque eles serão usados várias</span>
+    <span class="c"># vezes</span>
+    <span class="n">stock_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prices_stock</span><span class="p">)</span>
+    <span class="n">market_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prices_market</span><span class="p">)</span>
+
+    <span class="c"># Decide qual o conjunto de dados tem menos itens, pois para calcular o</span>
+    <span class="c"># beta é necessário que os dados da ação e de mercado tenha a mesma</span>
+    <span class="c"># quantidade de registros</span>
+    <span class="n">smallest</span> <span class="o">=</span> <span class="n">market_len</span>
+    <span class="k">if</span> <span class="n">stock_len</span> <span class="o">&lt;</span> <span class="n">market_len</span><span class="p">:</span>
+        <span class="n">smallest</span> <span class="o">=</span> <span class="n">stock_len</span>
+
+    <span class="c"># Cria os arrays de retornos dos preços</span>
+    <span class="c"># Os dados de retorno sempre serão uma unidade menor do que os arrays</span>
+    <span class="c"># originais</span>
+    <span class="n">stock_ret</span> <span class="o">=</span> <span class="n">get_returns_prices</span><span class="p">(</span><span class="n">prices_stock</span><span class="p">,</span> <span class="n">smallest</span><span class="p">)</span>
+    <span class="n">market_ret</span> <span class="o">=</span> <span class="n">get_returns_prices</span><span class="p">(</span><span class="n">prices_market</span><span class="p">,</span> <span class="n">smallest</span><span class="p">)</span>
+
+    <span class="c"># Calcula a covariância entre a ação e o mercado</span>
+    <span class="c"># http://docs.scipy.org/doc/numpy/reference/generated/numpy.cov.html</span>
+    <span class="n">covar_stock_market</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">stock_ret</span><span class="p">,</span> <span class="n">market_ret</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Covariância ação/mercado: &#39;</span><span class="p">,</span> <span class="n">covar_stock_market</span><span class="p">)</span>
+
+    <span class="c"># Calcula a variância dos retornos do mercado</span>
+    <span class="c"># http://docs.scipy.org/doc/numpy/reference/generated/numpy.var.html</span>
+    <span class="n">var_market</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">market_ret</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Variância mercado: &#39;</span><span class="p">,</span> <span class="n">var_market</span><span class="p">)</span>
+
+    <span class="c"># Beta é igual a covariância entre os retornos do ativo e retornos</span>
+    <span class="c"># do mercado dividido pela variância dos retornos do mercado.</span>
+    <span class="c"># Além disso, estamos arredondado o beta para duas casas decimais.</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">covar_stock_market</span> <span class="o">/</span> <span class="n">var_market</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c"># data atual</span>
+<span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+<span class="c"># data de início para pegar os dados de mercado - 5 anos</span>
+<span class="n">startDate</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="n">today</span><span class="o">.</span><span class="n">year</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+<span class="c"># a data final é a data de hoje</span>
+<span class="n">endDate</span> <span class="o">=</span> <span class="n">today</span>
+
+<span class="c"># pega os dados do índice Bovespa</span>
+<span class="n">stock</span> <span class="o">=</span> <span class="s">&#39;YAHOO/INDEX_BVSP&#39;</span>
+<span class="n">market_prices</span> <span class="o">=</span> <span class="n">get_prices</span><span class="p">(</span><span class="n">stock</span><span class="p">,</span> <span class="n">startDate</span><span class="p">,</span> <span class="n">endDate</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Mercado:&#39;</span><span class="p">,</span> <span class="n">stock</span><span class="p">[</span><span class="n">stock</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+
+<span class="c"># para os dados do YAHOO o índice de preço de fechamento ajustado é o 6</span>
+<span class="c"># [&quot;Date&quot;,&quot;Open&quot;,&quot;High&quot;,&quot;Low&quot;,&quot;Close&quot;,&quot;Volume&quot;,&quot;Adjusted Close&quot;]</span>
+<span class="n">closing_prices_market</span> <span class="o">=</span> <span class="n">get_closing_prices</span><span class="p">(</span><span class="n">market_prices</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+
+<span class="c"># pega os dados da ação PETR4</span>
+<span class="n">stock</span> <span class="o">=</span> <span class="s">&#39;GOOG/BVMF_PETR4&#39;</span>
+<span class="n">stock_prices</span> <span class="o">=</span> <span class="n">get_prices</span><span class="p">(</span><span class="n">stock</span><span class="p">,</span> <span class="n">startDate</span><span class="p">,</span> <span class="n">endDate</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Ação:&#39;</span><span class="p">,</span> <span class="n">stock</span><span class="p">[</span><span class="n">stock</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+
+<span class="c"># para os dados do GOOGLE o índice de preço de fechamento é o 4</span>
+<span class="c"># [&quot;Date&quot;,&quot;Open&quot;,&quot;High&quot;,&quot;Low&quot;,&quot;Close&quot;,&quot;Volume&quot;]</span>
+<span class="n">closing_prices_stock</span> <span class="o">=</span> <span class="n">get_closing_prices</span><span class="p">(</span><span class="n">stock_prices</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="n">beta</span> <span class="o">=</span> <span class="n">calc_beta</span><span class="p">(</span><span class="n">closing_prices_stock</span><span class="p">,</span> <span class="n">closing_prices_market</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;O beta é = &#39;</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+
+
+<p>O código em Pyhton acima pode ser baixado no Gist, no endereço: <a href="https://gist.github.com/royopa/a8af15e8cead604ff6c2">https://gist.github.com/royopa/a8af15e8cead604ff6c2</a></p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://about.me/royopa/">About Me</a></li>
+                            <li><a href="http://www.royopa.url.ph/">Royopa Blog in PHP</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://twitter.com/royopa">Twitter</a></li>
+                            <li><a href="https://www.facebook.com/royopa">Facebook</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
