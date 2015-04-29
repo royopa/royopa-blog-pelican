@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+        <meta charset="utf-8" />
+        <title>Royopa Blog - PHP</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Royopa Blog </a></h1>
+                <nav><ul>
+                    <li><a href="/category/dspace.html">DSpace</a></li>
+                    <li><a href="/category/finance.html">Finance</a></li>
+                    <li><a href="/category/git.html">GIT</a></li>
+                    <li class="active"><a href="/category/php.html">PHP</a></li>
+                    <li><a href="/category/solid.html">SOLID</a></li>
+                </ul>
+                </nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/como-gerar-um-novo-bootstrapphpcache-no-symfony.html">Como gerar um novo 'bootstrap.php.cache' no Symfony</a></h1>
+<footer class="post-info">
+        <span>Ter 17 março 2015</span>
+
+</footer><!-- /.post-info --><p>É muito comum num projeto ter diversos componentes de terceiros em uma aplicação (vendors). Veja na pasta vendor da sua aplicação a quantidade de arquivos que o seu projeto possui, imagine então ter que carregar um por um para utilizá-los!</p>
+<p>O Symfony possui um mecanismo para tentar diminuir a utilização do disco ao ter que carregar cada uma das classes de terceiros em arquivos separados. O framework cria um arquivo de inicialização que contém várias classes juntas em um único arquivo chamado de <strong><em>bootstrap.php.cache</em></strong>. </p>
+<p>O arquivo bootstrap.php.cache é recriado toda vez que você utilizar o comando <strong><em>composer install</em></strong>.
+Poŕem quando você utiliza o comando <strong><em>composer update</em></strong> o bootstrap.php.cache não é regerado. Veja abaixo como gerar um novo arquivo bootstrap.php.cache.</p>
+<h2>Gerando um novo "bootstrap.php.cache" no Symfony +2.1</h2>
+<p>Para gerar um novo arquivo bootstrap.php.cache no Symfony2 (versão +2.1), basta executar o seguinte comando:</p>
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> <span class="o">[</span>your_app_dir<span class="o">]</span>
+<span class="nv">$ </span>php ./vendor/sensio/distribution-bundle/Sensio/Bundle/DistributionBundle/Resources/bin/build_bootstrap.php
+</pre></div>
+
+
+<p>Mais informação sobre o arquivo de cache pode ser encontrada na <a href="http://symfony.com/doc/current/book/performance.html#use-bootstrap-files">Documentação Oficial do Symfony</a></p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/criando-um-service-provider-no-silex-framework.html" rel="bookmark"
+                           title="Permalink to Criando um Service Provider no Silex Framework">Criando um Service Provider no Silex Framework</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <span>Sáb 25 outubro 2014</span>
+
+</footer><!-- /.post-info -->                <p>Comecei a utilizar há pouco tempo o microframework Silex para desenvolver
+algumas aplicações mais simples.
+Lendo o artigo <a href="http://phpsp.org.br/silex-respectrelational-uma-boa-dupla/">Silex + Respect\Relational – Uma boa dupla</a>, do <a href="https://github.com/williancarminato/">Willian
+Carminato</a>, resolvi fazer um parecido usando o Respect Validation.</p>
+<h2>Respect Validation</h2>
+<p>O <a href="http://documentup.com/Respect/Validation/">Respect Validation</a> é um componente criado pelo <a href="http://gaigalas.net/#home">Alexandre Gaigalas (alganet)</a>
+para validar ...</p>
+                <a class="readmore" href="/criando-um-service-provider-no-silex-framework.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/eventos-no-doctrine-2.html" rel="bookmark"
+                           title="Permalink to Eventos no Doctrine 2">Eventos no Doctrine 2</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <span>Qui 04 setembro 2014</span>
+
+</footer><!-- /.post-info -->                <p>O Doctrine 2 possui um sistema de eventos que faz parte do pacote Common. O
+doctrine usa esse sistema para disparar eventos de sistema, principalmente
+<code>lifecycle events</code>. Mas podemos também criar nossos próprios eventos personalizados.</p>
+<h3>O Sistema de Eventos</h3>
+<p>O sistema de eventos é controlado pelo <code>EventManager</code>. Ele é o ...</p>
+                <a class="readmore" href="/eventos-no-doctrine-2.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+            </ol><!-- /#posts-list -->
+<p class="paginator">
+    Page 1 / 1
+</p>
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://about.me/royopa/">About Me</a></li>
+                            <li><a href="http://www.royopa.url.ph/">Royopa Blog in PHP</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://twitter.com/royopa">Twitter</a></li>
+                            <li><a href="https://www.facebook.com/royopa">Facebook</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
